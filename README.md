@@ -17,4 +17,4 @@ Utilized the built in accelerometer of the Pytrack.  Outputs sensor alert via Lo
 Receives output messages of the LoPy sensors via LoRa.
 
 # lora broker (raspi)
-LoPy gateway is plugged directly into the raspi via USB.  Forwards received LoPy messages to a remote PostgreSQL DB.
+LoPy gateway is plugged directly into the raspi via USB.  Forwards received LoPy messages to a remote PostgreSQL DB.  Requires: python3, postgresql, psycopg2, and libpq-dev.
