@@ -18,7 +18,7 @@ def lopy_usb():
 	''' This fuction reads LoRa messages received by a LoPy via USB '''
 	
 	while True:
-		msg_raw = ser.read(100)
+		msg_raw = ser.read(75)
 		if msg_raw != b'':
 			msg = msg_raw.decode()
 			msg = msg.strip("'b")
@@ -30,11 +30,16 @@ def lopy_usb():
 # send msg to postgreSQL DB
 for lopy_data in lopy_usb():
 	try:
-		con = psycopg2.connect(user = "username",
-					password = "password",
-					host = "127.0.0.1",
+		con = psycopg2.connect(user = "USERNAME",
+					password = "PASSWORD",
+					host = "1.1.1.1",
 					port = "5432",
-					database = "sensors")
+					database = "DATABASE")
+	# add some error handling for connection
+	except (Exception, psycopg2.DatabaseError) as error:
+		print("DB insert unsuccessful: %s\n%s" % (lopy_data, error))
+	# if no error execute DB insert
+	try:
 		cur = con.cursor()
 		SQL = "INSERT INTO lora_feed (data) VALUES (%s);"
 		new_data = (lopy_data, )
@@ -43,9 +48,8 @@ for lopy_data in lopy_usb():
 		cur.close()
 		con.close()
 		print("DB insert successful: %s" % (lopy_data))
-	# add some error handling
+	# add some error handling for db insert
 	except (Exception, psycopg2.DatabaseError) as error:
-		print(error)
-		print("DB insert unsuccessful: %s" % (lopy_data))
+		print("DB insert unsuccessful: %s\n%s" % (lopy_data, error))
 
 
