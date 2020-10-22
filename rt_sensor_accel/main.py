@@ -26,26 +26,36 @@ id = ubinascii.hexlify(machine.unique_id()).decode()[8:12]
 # type of sensor
 type = "accel"
 
-# creat lora socket
-lora = LoRa(mode=LoRa.LORA, region=LoRa.US915,
-            frequency=902000000,
-            tx_power=20,
-            sf=12,
-            power_mode=LoRa.TX_ONLY)
+pycom.heartbeat(False)
+# checks to see if system woke up because of the Accelerometer
+if py.get_wake_reason() == 1:
 
-sock = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
-sock.setsockopt(socket.SOL_LORA, socket.SO_DR, 3)
+    #test decode
+    pycom.rgbled(0xffffff)
+    time.sleep(1)
+    # create lora socket
+    lora = LoRa(mode=LoRa.LORA, region=LoRa.US915,
+                frequency=902000000,
+                tx_power=20,
+                sf=12,
+                power_mode=LoRa.TX_ONLY)
+
+    sock = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
+    sock.setsockopt(socket.SOL_LORA, socket.SO_DR, 3)
+
+    #sends message
+    msg = '{ "id":"%s", "type":"%s", "activity":"device moved" }' % (id, type)
+    sock.send(msg)
+    sock.close()
+
+else:
+    pycom.rgbled(0xff0000)
+    time.sleep(1)
+#enables rising signal wakeup, which is necessary for acclerometer input
+py.setup_int_wake_up(True, False)
 
 # enable the activity/inactivity interrupts
 # set the accelereation threshold to 1500mG (1.5G) and the min duration to 200ms
-acc.enable_activity_interrupt(1500, 200)
-
-# check for activity
-def activity_detection():
-    '''This function will alert when sensor acceleration exceeds 1.5G'''
-    while True:
-        if acc.activity() == "Activity interrupt" :
-            msg = '{ "id":"%s", "type":"%s", "activity":"device moved" }' % (id, type)
-            print(msg)
-            time.sleep_ms(500)
-            sock.send(msg)
+acc.enable_activity_interrupt(1200, 200)
+#py.setup_sleep(60)
+py.go_to_sleep()
